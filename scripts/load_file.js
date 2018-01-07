@@ -1,7 +1,7 @@
 function load_json(url, placeName, callback) {
     var xObj = new XMLHttpRequest();
     xObj.overrideMimeType("application/json");
-    //console.log("search url " + url);
+    console.log("search url " + url);
     xObj.open('GET', url, true);
     xObj.onreadystatechange = function () {
         if (xObj.readyState == 4 && xObj.status == "200") {
@@ -69,8 +69,6 @@ function prepare_card() {
 
     return card;
 }
-
-
 
 function tag_entities(response, placeName, ) {
     var data = JSON.parse(response);
@@ -157,7 +155,7 @@ function tag_articles(response, place_name) {
         }
         
     }
-    $(place_name).html(out);
+    $("#" + place_name).html(out);
 }
 
 function fetch_articles(search_term, place_name) {
@@ -173,8 +171,9 @@ function fetch_articles(search_term, place_name) {
 
 function search() {
     // TODO - Fix this to take a search term 
-    console.log("searching for articles now ");
+    
     search_term = document.getElementById("searchBox").value;
-    fetch_articles(search_term, "#articles")
+    console.log("searching for articles now [" + search_term + "]");
+    fetch_articles(search_term, "articles")
 
 }

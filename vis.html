@@ -1,0 +1,62 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+    <link href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+    <script src="scripts/load_file.js"></script>
+    <script src="scripts/moment-with-locales.js"></script>
+    <script src="scripts/draw_network.js"></script>
+    <style type="text/css">
+        #mynetwork {
+            width: 800px;
+            height: 600px;
+            border: 1px solid lightgray;
+        }
+    </style>
+    <title>Gopher</title>
+    <script type="text/javascript">
+        $(document).ready( function(){
+            url = "http://localhost:5000/network" ;
+            console.log("Loading the complete network and caching ");
+
+            load_json(url, "myNetwork", cache_network);
+
+        })
+    </script>
+</head>
+
+<body>
+        <button type="button" onclick="draw_chart()">Re.draw Chart</button>
+        <label for="typeOptions">Choose node type </label>
+        <select id="typeOptions" multiple>
+            <option value="volvo">Volvo</option>
+            <option value="saab">Saab</option>
+            <option value="mercedes">Mercedes</option>
+            <option value="audi">Audi</option>
+            <option value="audi2">Audi2</option>
+            <option value="audi3">Audi3</option>
+            <option value="audi4">Audi4</option>
+            <option value="audi5">Audi5</option>
+        </select>
+        <label for="nodeOptions">Choose node id</label>
+        <select id="nodeOptions">
+            <option value="volvo">Volvo</option>
+            <option value="saab">Saab</option>
+            <option value="mercedes">Mercedes</option>
+            <option value="audi">Audi</option>
+        </select>
+
+    <div id="myNetwork">
+        
+    </div>
+
+    <script type="text/javascript">
+       
+    </script>
+</body>
+
+</html>
