@@ -99,19 +99,21 @@ def generate_involved_parties():
         (108, 220),
         (109, 213),
         (109, 212),
-        {109, 216}
+        (109, 216),
+        (110, 222),
+        (110, 206)
+
         
     ]
     return involved_parties
 
 
 def generate_aliases():
-    # aliases = [
-    #     (210, 220),
-    #     (210, 215)
-    # ]
+    aliases = [
+        (210, 220),
+        (210, 215)
+    ]
 
-    aliases = []
 
     return aliases
 
@@ -202,6 +204,8 @@ def related_cases(case_id,G, ignore_list=[], level=0):
     result_cases["cpty_cases"] = set()
     r = None
     for edge in edges:
+        if level > 3:
+            break
         aliases = set()
         alias_cases = set()
         other_cases = set()
@@ -216,29 +220,37 @@ def related_cases(case_id,G, ignore_list=[], level=0):
             pass
         if edge[2]["relationship"] == "sameAs":
             result_cases["aliases"].add(edge[1])
+            log("[%d] following alias [%d] " % (level, edge[1]) )
             r = related_cases(edge[1], G, [edge[0]],level+1)
         elif edge[2]["relationship"] == "involve":
             if G.nodes()[edge[1]]["type"] == "case":
+                log("[%d] adding case [%d] " % (level, edge[1]) )
                 result_cases["other_cases"].add(edge[1])
-            else:
+            elif G.nodes()[edge[1]]["type"] == "person":
+                log("[%d] following person [%d] " % (level, edge[1]) )
                 r = related_cases(edge[1], G, [edge[0]], level+1)
         elif edge[2]["relationship"] == "employee":
+            log("[%d] following employee [%d] " % (level, edge[1]) )
             r = related_cases(edge[1], G, [edge[0]], level+1)
         elif edge[2]["relationship"] == "counterparty":
             ignore_list.append(edge[1])
-
+            log("[%d] following counterparty [%d] " % (level, edge[1]) )
             r = related_cases(edge[1], G, ignore_list, level+1)
+        elif edge[2]["relationship"] == "mentions":
+            if G.nodes()[edge[1]]["type"] == "person":
+                log("[%d] following person [%d] " % (level, edge[1]) )
+                ignore_list.append(edge[1])
+                r = related_cases(edge[1], G, ignore_list, level+1)
         else:
             continue
     
-    if r is not None:
-            result_cases["aliases"].update(r["aliases"])
-            result_cases["alias_cases"].update(r["alias_cases"])
-            result_cases["other_cases"].update(r["other_cases"])
-            result_cases["org_cases"].update(r["org_cases"])
-            result_cases["cpty_cases"].update(r["cpty_cases"])
-            log("[%d] - r " % (level))
-            log(r)    
+        if r is not None:
+                result_cases["aliases"].update(r["aliases"])
+                result_cases["alias_cases"].update(r["alias_cases"])
+                result_cases["other_cases"].update(r["other_cases"])
+                result_cases["org_cases"].update(r["org_cases"])
+                result_cases["cpty_cases"].update(r["cpty_cases"])
+    
 
     result_cases["aliases"] = list(result_cases["aliases"] )
     result_cases["alias_cases"] = list(result_cases["alias_cases"] )
@@ -302,7 +314,7 @@ class Network(Resource):
     def get(self):
         json_data = json_graph.node_link_data(G)
         vis_json(json_data)
-        log(json_data)
+        # log(json_data)
         return json_data
 
     def put(self):
