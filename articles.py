@@ -1,23 +1,22 @@
 import requests
 from bs4 import BeautifulSoup
 from polyglot.text import Text
+import spacy
 
 
+    GUARDIAN_KEY= ""
 
-def search_web(search_term, page_size=20):
-    API_KEY= "ADD_KEY_HERE"
-
-    base_url= "ADD BASE URL HERE"
+    base_url= 'https://content.guardianapis.com/search?q='
     quote='"'
 
-    search_url = base_url + quote + search_term +  quote + "&page-size=" + str(page_size) + "&api-key=" + API_KEY
-    print("searching site with following url \n [%s]" % search_url)
+    search_url = base_url + quote + search_term +  quote + "&page-size=" + str(page_size) + "&api-key=" + GUARDIAN_KEY
+    print("searching guardian with following url \n [%s]" % search_url)
     r = requests.get(search_url)
     # TODO - Check for 200
     if r.status_code == 200:
         return json.loads(r.content)["response"]
     else:
-        print("search  failed " + r.reason)
+        print("search guardian failed " + r.reason)
         return None
 
 def generate_ngrams(text=None, min_n = 2, max_n = 4):
@@ -50,7 +49,11 @@ def download_article(web_url):
         return None
     # TODO : Check for 200
     soup = BeautifulSoup(r.content, 'html.parser')
-    text = soup.find('div', attrs={'class':"content__article-body"} ).text
+    text_element = soup.find('div', attrs={'class':"content__article-body"} )
+    if text_element is None:
+        text = ""
+    else:
+        text = text_element.text
 
     return text
 
@@ -84,6 +87,8 @@ def parse_search_result(search_response):
         title = results[i]["webTitle"]
         # print("Date [ %s] Title [%s]" % (publish_date, title))
         text = download_article(web_url)
+        if text is None:
+            continue
 
         article = {
             "title" : title,
@@ -116,11 +121,15 @@ def check_string(input):
 def extract_entities(article_list):
     new_articles = []
     for i in range(0, len(article_list)):
+        print("Parsing article number %d " % (i))
         article = {}
         copy_article(article_list[i], article)
         parsed_text = Text(article["text"])
         article["entities"] = {}
         article["ngrams"] = []
+        if parsed_text == "":
+            print("Skipping article %d" % i)
+            continue
         for sent in parsed_text.sentences:
             for entity in sent.entities:
                 named_entity = ' '.join(entity)
@@ -137,12 +146,39 @@ def extract_entities(article_list):
         for key in article["entities"].keys():
             article["entities"][key] = list(set(article["entities"][key]))
 
-        unique_ngrams = list(set(list(article["ngrams"])))
+        unique_ngrams = list(set(article["ngrams"]))
         article["ngrams"] = unique_ngrams
         new_articles.append(article)
     return new_articles
- 
-article2 = extract_entities(article)
+
+# article2 = extract_entities(article)
+
+def extract_entities_spacy(article_list):
+    new_articles = []
+    nlp = spacy.load('en')
+    for i in range(0, len(article_list)):
+        print("Parsing article number %d " % (i))
+        article = {}
+        copy_article(article_list[i], article)
+        
+        doc = nlp(article["text"])
+        article["entities"] = {}
+        article["ngrams"] = []
+
+        for ent in doc.ents:
+            if ent.label_ not in article["entities"].keys():
+                article["entities"][ent.label_] = [ent.text]
+            else:
+                article["entities"][ent.label_].append(ent.text)
+            article["ngrams"].append(ent.text)
+
+        for key in article["entities"].keys():
+            article["entities"][key] = list(set(article["entities"][key]))
+
+        article["ngrams"] = list(set(article["ngrams"]))
+        new_articles.append(article)
+    return new_articles
+
 
 def copy_article(source, target):
     for key in source.keys():
@@ -158,13 +194,13 @@ def copy_articles(source, target):
 
 def save_articles(file_name, data):
     import json
-    with open(file_name,'w') as f:
+    with open(file_name,encoding="utf-8", mode='w') as f:
         json.dump(data, f, ensure_ascii=False)
 
 articles = []
-search_term = "<ADD SEARCH TERM HERE>"
-page_size=20
-search_response = search_web(search_term=search_term)
+search_term = "money laundering"
+page_size=200
+search_response = search_guardian(search_term=search_term, page_size=page_size)
 # Load the results in to articles
 articles = []
 articles = parse_search_result(search_response)
@@ -173,12 +209,15 @@ a2 = []
 copy_articles(articles, a2)
 len(articles)
 len(a2)
-new_articles = extract_entities(a2)
+new_articles = extract_entities_spacy(a2)
 
+a3 = []
+copy_articles(articles, a3)
 
-save_articles("data/articles_web.json", new_articles)
+save_articles("/Users/rdx/Documents/knowledge/data/articles_guardian.json", new_articles)
 
-matching_articles = fuzzy_search("perram", new_articles)
+save_articles("/Users/rdx/Documents/knowledge/data/articles_guardian_spacy.json", a3)
+# matching_articles = fuzzy_search("perram", new_articles)
 
 
 
