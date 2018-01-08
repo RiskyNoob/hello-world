@@ -4,6 +4,7 @@ from polyglot.text import Text
 import spacy
 
 
+def search_guardian(search_term, page_size=20):
     GUARDIAN_KEY= ""
 
     base_url= 'https://content.guardianapis.com/search?q='
